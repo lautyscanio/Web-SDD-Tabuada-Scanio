@@ -19,6 +19,19 @@ npm run dev
 npm run build
 ```
 
+## Autenticación
+
+Email/password vía Firebase Auth. Al iniciar la app por primera vez se
+crea automáticamente un usuario admin (`admin@gestioncine-scanio-tabuada.local`
+/ `123456`) si todavía no existe ninguno — ver `specs/auth-seed-admin.spec.md`.
+Un usuario nuevo que se registra queda como `cliente`.
+
+Reglas de Firestore: `firestore.rules` tiene una versión **interina**
+(cualquier usuario autenticado puede leer/escribir cualquier doc, salvo
+`meta/*` que es público de solo-lectura) para poder construir los módulos
+de ABM y compra de entradas. Se reemplaza por la versión final,
+granular por rol, en `specs/firestore-rules.spec.md`.
+
 ## Deploy automático (CI/CD)
 
 Cada push a `main` dispara `.github/workflows/firebase-hosting-merge.yml`:

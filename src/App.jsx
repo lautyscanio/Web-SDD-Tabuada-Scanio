@@ -1,35 +1,52 @@
-import { app } from './firebase'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Login from './pages/Login'
 
-function App() {
-  const firebaseReady = Boolean(app.options.projectId)
+function AuthGate() {
+  const { user, role, loading, logout } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0d14] text-slate-400">
+        Cargando…
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Login />
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100 px-4">
-      <div className="max-w-md w-full text-center space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Sistema de Gestión de Cine
-        </h1>
-        <p className="text-slate-400">
-          Setup inicial del proyecto en construcción.
+    <div className="flex min-h-screen items-center justify-center bg-[#0b0d14] px-4 text-slate-100">
+      <div className="w-full max-w-md space-y-4 text-center">
+        <p className="text-xs uppercase tracking-[0.35em] text-amber-400/80">
+          Gestión de Cine
         </p>
-        <div
-          className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium ${
-            firebaseReady
-              ? 'bg-emerald-500/15 text-emerald-400'
-              : 'bg-red-500/15 text-red-400'
-          }`}
+        <h1 className="text-2xl font-semibold">Sesión iniciada</h1>
+        <p className="text-slate-400">
+          {user.email} · rol <span className="text-amber-400">{role ?? 'sin asignar'}</span>
+        </p>
+        <p className="text-sm text-slate-500">
+          Las pantallas de {role === 'admin' ? 'administración' : 'compra de entradas'} se
+          agregan en los próximos módulos.
+        </p>
+        <button
+          type="button"
+          onClick={logout}
+          className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5"
         >
-          <span
-            className={`h-2 w-2 rounded-full ${
-              firebaseReady ? 'bg-emerald-400' : 'bg-red-400'
-            }`}
-          />
-          {firebaseReady
-            ? `Firebase conectado (${app.options.projectId})`
-            : 'Firebase sin configurar'}
-        </div>
+          Cerrar sesión
+        </button>
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   )
 }
 

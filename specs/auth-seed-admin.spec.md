@@ -16,11 +16,15 @@ automática de un usuario admin la primera vez que se inicia el sistema.
   - **Email**: `admin@gestioncine-scanio-tabuada.local` (Firebase Auth exige
     formato de email válido; se documenta acá porque "admin" solo no es un
     email válido — ver Assumptions).
-  - **Password**: `123` (según lo pedido).
+  - **Password**: `123456` — el enunciado original pedía `123`, pero
+    Firebase Authentication exige un mínimo de 6 caracteres (no
+    configurable en el plan gratuito). Se documenta acá como excepción:
+    misma intención (contraseña trivial de demo), ajustada al mínimo
+    técnico de la plataforma. Confirmado con el usuario.
   - **Enfoque elegido**: chequeo client-side al iniciar la app (no Cloud
     Function, no script aparte). Trade-off de seguridad: la lógica y la
     contraseña quedan visibles en el bundle del frontend — aceptable acá
-    porque (a) la contraseña "123" ya es un requisito explícito y hardcodeado
+    porque (a) la contraseña ya es un requisito explícito y hardcodeado
     sin importar dónde corra el chequeo, y (b) es una app académica de
     demo, no un sistema en producción real. El chequeo es idempotente: si
     dos pestañas lo disparan a la vez, `createUserWithEmailAndPassword`
@@ -51,7 +55,7 @@ automática de un usuario admin la primera vez que se inicia el sistema.
 
 - [ ] Al abrir la app por primera vez (sin usuarios), se crea el admin
       seed automáticamente, sin acción del usuario.
-- [ ] `admin@gestioncine-scanio-tabuada.local` / `123` loguea como admin.
+- [ ] `admin@gestioncine-scanio-tabuada.local` / `123456` loguea como admin.
 - [ ] Un usuario nuevo puede registrarse y queda como `cliente`.
 - [ ] Mensajes de error claros y en español para cada excepción de la
       lista de arriba (no mostrar el código crudo de Firebase).
