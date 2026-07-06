@@ -127,3 +127,23 @@
 - No hay tareas [P] entre fases distintas (todo dentro de Foundational y Polish, por archivos/comandos independientes).
 - T002 es la única tarea que requiere intervención manual directa del usuario en su propia terminal (login/consentimiento interactivo) — el resto puede ejecutarse vía agente.
 - Commitear después de cada checkpoint de fase, no todo junto al final.
+
+## Bug crítico encontrado y arreglado (2026-07-06, post go-live)
+
+- [x] **T017 (bug crítico)**: la validación original de este módulo (T006/T007)
+      solo confirmó que el workflow corría y el HTML se servía (HTTP 200,
+      `curl` del bundle) — no que la app realmente renderizara. El build
+      de CI nunca tuvo las variables `VITE_FIREBASE_*` (`.env` está en
+      `.gitignore`, correctamente, pero eso significa que tampoco llega al
+      runner de GitHub Actions). Cada deploy automático compilaba con la
+      config de Firebase `undefined` → `auth/invalid-api-key` → pantalla
+      en blanco en producción. Como el workflow corre en cada push
+      (después de cualquier deploy manual local que sí tuviera `.env`
+      real), la versión rota terminaba siendo la que quedaba publicada.
+      Detectado recién cuando el usuario reportó la página en blanco y se
+      verificó con un navegador headless real (Chromium vía
+      `puppeteer-core`), no solo con `curl`. Fix: declarar los valores
+      (públicos, no secretos) como `env:` del step de build en
+      `firebase-hosting-merge.yml`. Lección para el resto del proyecto:
+      "el HTML carga" no prueba que la app funcione — hace falta un
+      navegador real corriendo el JS.
