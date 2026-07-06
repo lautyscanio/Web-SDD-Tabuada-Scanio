@@ -58,7 +58,7 @@ export default function Usuarios() {
 
   return (
     <div className="mx-auto w-full max-w-3xl p-6">
-      <h2 className="mb-4 text-xl font-semibold text-slate-100">Usuarios</h2>
+      <h2 className="mb-4 font-display text-3xl tracking-wide text-slate-100">Usuarios</h2>
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">

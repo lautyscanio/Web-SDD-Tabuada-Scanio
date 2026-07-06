@@ -79,7 +79,7 @@ export default function Login() {
           <p className="text-xs uppercase tracking-[0.35em] text-amber-400/80">
             Gestión de Cine
           </p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-50">
+          <h1 className="mt-2 font-display text-3xl tracking-wide text-slate-50">
             {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
           </h1>
         </div>

@@ -11,17 +11,18 @@
 
 ## Phase 2: User Story 1 - Identidad visual propia (P1) 🎯
 
-- [ ] T003 [US1] Aplicar `font-display` a la marca "Gestión de Cine" en
-      `App.jsx` (Header).
-- [ ] T004 [US1] Aplicar `font-display` al `h1` de `Login.jsx`.
-- [ ] T005 [US1] Aplicar `font-display` al `h2` de `Usuarios.jsx`.
-- [ ] T006 [US1] Confirmar que `CinesList` (cliente y admin),
+- [x] T003 [US1] Marca "Gestión de Cine" en `App.jsx` ya usaba
+      `font-display`.
+- [x] T004 [US1] `h1` de `Login.jsx` → `font-display`.
+- [x] T005 [US1] `h2` de `Usuarios.jsx` → `font-display`.
+- [x] T006 [US1] Verificado: `CinesList` (cliente y admin),
       `FuncionesDeCine`, `Butacas`, `Perfil` y `CineDetalle` ya usan
-      `font-display` en sus títulos (hecho durante 002/003 — solo
-      verificar, no repetir trabajo).
+      `font-display` (`grep -L` sobre todos los `.jsx` de cliente/admin
+      no devolvió ningún archivo sin la clase).
 
 ## Phase 3: Polish
 
-- [ ] T007 `npm run build` + `grep` confirmando 0 referencias a
-      `fonts.googleapis`/`fonts.gstatic` en `dist/`.
-- [ ] T008 Commit + push.
+- [x] T007 `npm run build` + `grep`: 0 referencias a
+      `fonts.googleapis`/`fonts.gstatic` en `dist/`; `bebas-neue-400-*.woff2`
+      y `sora-variable-*.woff2` empaquetados correctamente.
+- [x] T008 Commit + push.
