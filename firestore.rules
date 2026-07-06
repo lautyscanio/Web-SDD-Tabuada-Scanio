@@ -1,20 +1,76 @@
 rules_version = '2';
 
-// NOTA: reglas interinas mientras se construyen los módulos 3-6.
-// Se reemplazan por las reglas finales (admin vs cliente, granulares por
-// colección) en el módulo dedicado: specs/firestore-rules.spec.md.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Flag público mínimo para que el chequeo de "¿ya existe un admin?"
-    // pueda correr antes de que haya sesión iniciada, sin exponer la
-    // colección users (que sí tiene emails) a lectura anónima.
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function adminAlreadySeeded() {
+      return exists(/databases/$(database)/documents/meta/adminSeeded);
+    }
+
+    // Flag público mínimo para el chequeo de seed pre-login (ver módulo auth).
     match /meta/{doc} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+
+      // Alta: el propio usuario se crea a sí mismo como "cliente".
+      // Excepción de bootstrap: el seed inicial puede crearse como "admin"
+      // únicamente mientras no exista ningún admin todavía.
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        request.resource.data.role == 'cliente' ||
+        (request.resource.data.role == 'admin' && !adminAlreadySeeded())
+      );
+
+      // Modificación (rol, disabled): solo admin, y ni el propio admin
+      // puede quitarse a sí mismo el rol de admin.
+      allow update: if isAdmin() && !(
+        request.auth.uid == userId &&
+        resource.data.role == 'admin' &&
+        request.resource.data.role != 'admin'
+      );
+
+      allow delete: if false;
+    }
+
+    match /cines/{cineId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /salas/{salaId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /funciones/{funcionId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // create vs update: si el doc ya existe, "create" no matchea y cae en
+    // "update" (solo admin) — refuerzo a nivel reglas de la transacción
+    // atómica del módulo de compra de entradas.
+    match /boletos/{ticketId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

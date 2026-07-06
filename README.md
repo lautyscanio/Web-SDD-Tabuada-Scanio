@@ -26,11 +26,11 @@ crea automáticamente un usuario admin (`admin@gestioncine-scanio-tabuada.local`
 / `123456`) si todavía no existe ninguno — ver `specs/auth-seed-admin.spec.md`.
 Un usuario nuevo que se registra queda como `cliente`.
 
-Reglas de Firestore: `firestore.rules` tiene una versión **interina**
-(cualquier usuario autenticado puede leer/escribir cualquier doc, salvo
-`meta/*` que es público de solo-lectura) para poder construir los módulos
-de ABM y compra de entradas. Se reemplaza por la versión final,
-granular por rol, en `specs/firestore-rules.spec.md`.
+Reglas de Firestore: `firestore.rules` ya tiene las reglas **finales**
+granulares por rol (admin vs cliente) — ver `specs/firestore-rules.spec.md`.
+Un cliente no puede escribir `cines`/`salas`/`funciones`/`users`, no puede
+comprar a nombre de otro `userId`, y ni el propio admin puede quitarse su
+rol de admin. Todo verificado contra el proyecto real, no solo en teoría.
 
 ## Deploy automático (CI/CD)
 
