@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import { useAuth } from '../context/AuthContext'
 
 const ERROR_MESSAGES = {
   'auth/email-already-in-use': 'Ese email ya está registrado. Iniciá sesión en cambio.',
@@ -19,6 +20,7 @@ function messageFor(err) {
 }
 
 export default function Login() {
+  const { authError, clearAuthError } = useAuth()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,6 +30,7 @@ export default function Login() {
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
+    clearAuthError()
     setSubmitting(true)
     try {
       if (mode === 'signup') {
@@ -118,9 +121,9 @@ export default function Login() {
             />
           </div>
 
-          {error && (
+          {(error || authError) && (
             <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-              {error}
+              {error || authError}
             </p>
           )}
 

@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState('')
 
   useEffect(() => {
     seedAdminIfMissing()
@@ -35,7 +36,13 @@ export function AuthProvider({ children }) {
       unsubscribeProfile = onSnapshot(
         doc(db, 'users', firebaseUser.uid),
         (snap) => {
-          setRole(snap.exists() ? snap.data().role : null)
+          const data = snap.exists() ? snap.data() : null
+          if (data?.disabled) {
+            setAuthError('Tu cuenta fue deshabilitada por un administrador.')
+            signOut(auth)
+            return
+          }
+          setRole(data?.role ?? null)
           setLoading(false)
         },
         () => {
@@ -51,7 +58,14 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const value = { user, role, loading, logout: () => signOut(auth) }
+  const value = {
+    user,
+    role,
+    loading,
+    authError,
+    clearAuthError: () => setAuthError(''),
+    logout: () => signOut(auth),
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
