@@ -10,7 +10,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Crear la carpeta `.github/workflows/` en la raíz del repo
+- [x] T001 Crear la carpeta `.github/workflows/` en la raíz del repo (generada por `firebase init hosting:github` en T002)
 
 ---
 
@@ -20,9 +20,9 @@
 
 ⚠️ **Bloqueante**: T002 requiere una terminal interactiva (login de `gh`/`firebase` + prompts) — es una tarea manual del usuario, no automatizable desde este agente.
 
-- [ ] T002 (MANUAL, requiere terminal del usuario) Correr `firebase init hosting:github` en la raíz del repo: crea el Service Account con rol Hosting Admin, el GitHub secret correspondiente, y el/los workflow(s) base en `.github/workflows/`
-- [ ] T003 Revisar el/los workflow(s) generados por T002; si se generó un workflow de preview por Pull Request, eliminarlo (fuera de alcance según spec.md — Assumptions)
-- [ ] T004 [P] Confirmar que el secret quedó creado: `gh secret list` debe mostrar el secret usado por el workflow
+- [x] T002 (MANUAL, requiere terminal del usuario) Correr `firebase init hosting:github` en la raíz del repo: crea el Service Account con rol Hosting Admin, el GitHub secret correspondiente, y el/los workflow(s) base en `.github/workflows/` (secret `FIREBASE_SERVICE_ACCOUNT_GESTIONCINE_SCANIO_TABUADA` creado)
+- [x] T003 Revisar el/los workflow(s) generados por T002; se generó `firebase-hosting-pull-request.yml` (preview por PR) — eliminado por estar fuera de alcance según spec.md. `firebase-hosting-merge.yml` quedó (push a main, npm ci && npm run build, channelId live) y coincide con lo planeado en plan.md
+- [x] T004 [P] Confirmar que el secret quedó creado: `gh secret list` lo muestra
 
 **Checkpoint**: Credenciales listas — recién acá tiene sentido probar las user stories.
 
@@ -36,7 +36,7 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Ajustar `.github/workflows/<nombre-generado-por-T002>.yml`: trigger únicamente `on: push: branches: [main]` (sin `pull_request`), step de `npm ci` + `npm run build`, y deploy de `dist/` con `FirebaseExtended/action-hosting-deploy` en modo `live` (sin canal de preview)
+- [x] T005 [US1] `.github/workflows/firebase-hosting-merge.yml` ya generado por T002 con exactamente lo planeado: trigger único `push` a `main`, `npm ci && npm run build`, deploy `live` sin canal de preview — no hizo falta ajustar nada
 - [ ] T006 [US1] Pushear un cambio trivial y visible en `src/App.jsx` a `main`
 - [ ] T007 [US1] Verificar en la pestaña "Actions" de GitHub que el run terminó exitoso, y en `https://gestioncine-scanio-tabuada.web.app` que el cambio está publicado (siguiendo el escenario 1 de `quickstart.md`)
 
