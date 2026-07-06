@@ -12,6 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
+        env:
+          # Config pública del SDK web de Firebase (no son credenciales
+          # secretas — quedan igualmente visibles en el bundle del
+          # navegador; la seguridad real la dan las Firestore Rules).
+          # .env está en .gitignore y nunca llega a este runner, por eso
+          # se declaran acá explícitamente.
+          VITE_FIREBASE_API_KEY: AIzaSyDuIjcKi4ezOEHdpZq4nf8-KHtayLr8Uf0
+          VITE_FIREBASE_AUTH_DOMAIN: gestioncine-scanio-tabuada.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: gestioncine-scanio-tabuada
+          VITE_FIREBASE_STORAGE_BUCKET: gestioncine-scanio-tabuada.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: '72997194046'
+          VITE_FIREBASE_APP_ID: '1:72997194046:web:5ebd18c0923390aef0046f'
+          VITE_FIREBASE_MEASUREMENT_ID: G-KKLYWTQ7JB
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
