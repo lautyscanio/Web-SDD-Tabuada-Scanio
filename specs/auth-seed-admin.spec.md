@@ -11,6 +11,21 @@ automática de un usuario admin la primera vez que se inicia el sistema.
   no solo en Firebase Auth (que no tiene roles nativos).
 - Un usuario común se registra solo (sign up estándar) → queda creado con
   `role: "cliente"`.
+
+### Amendment 2026-07-06: datos de perfil + confirmación de contraseña
+
+- El registro pide, además de email/contraseña: **nombre, apellido, DNI y
+  confirmar contraseña** (validado client-side antes de llamar a Firebase
+  — si no coinciden, no se intenta crear la cuenta).
+- Estos datos se guardan en `users/{uid}` junto con `role`/`email`.
+- La app ya NO muestra el email en el header ni en el perfil como
+  identificador principal — muestra `nombre + apellido`
+  (`AuthContext.displayName`, con fallback al email si por algún motivo
+  el perfil no tiene nombre cargado, p. ej. cuentas viejas de antes de
+  este cambio).
+- Un admin ya logueado puede dar de alta **otro admin** directamente
+  desde la pantalla de Usuarios (sin que esa persona se auto-registre
+  primero como cliente) — ver `abm-usuarios.spec.md`.
 - Seed de admin: al iniciar la app, si no existe ningún documento en
   `users` con `role == "admin"`, se crea automáticamente un usuario admin.
   - **Email**: `admin@gestioncine-scanio-tabuada.local` (Firebase Auth exige
@@ -50,6 +65,8 @@ automática de un usuario admin la primera vez que se inicia el sistema.
 - El doc de Firestore `users/{uid}` no existe todavía (race entre
   `createUserWithEmailAndPassword` y el `setDoc` del perfil) — manejar con
   loading state hasta que el doc exista.
+- Contraseñas que no coinciden al registrarse → mensaje claro antes de
+  intentar crear la cuenta (no un error de Firebase).
 
 ## Criterios de aceptación
 

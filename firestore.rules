@@ -29,9 +29,14 @@ service cloud.firestore {
       // Alta: el propio usuario se crea a sí mismo como "cliente".
       // Excepción de bootstrap: el seed inicial puede crearse como "admin"
       // únicamente mientras no exista ningún admin todavía.
-      allow create: if isSignedIn() && request.auth.uid == userId && (
-        request.resource.data.role == 'cliente' ||
-        (request.resource.data.role == 'admin' && !adminAlreadySeeded())
+      // Un admin ya logueado también puede crear el perfil de OTRO usuario
+      // (p.ej. dar de alta a otro admin) con cualquier rol.
+      allow create: if isSignedIn() && (
+        (request.auth.uid == userId && (
+          request.resource.data.role == 'cliente' ||
+          (request.resource.data.role == 'admin' && !adminAlreadySeeded())
+        )) ||
+        isAdmin()
       );
 
       // Modificación (rol, disabled): solo admin, y ni el propio admin

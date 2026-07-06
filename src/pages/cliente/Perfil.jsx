@@ -4,7 +4,7 @@ import { db } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Perfil() {
-  const { user } = useAuth()
+  const { user, profile, displayName } = useAuth()
   const [boletos, setBoletos] = useState([])
   const [funciones, setFunciones] = useState({})
   const [cines, setCines] = useState({})
@@ -44,7 +44,10 @@ export default function Perfil() {
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h2 className="mb-1 font-display text-3xl tracking-wide text-slate-100">Mi perfil</h2>
-      <p className="mb-6 text-sm text-slate-500">{user.email}</p>
+      <p className="mb-6 text-sm text-slate-500">
+        {displayName}
+        {profile?.dni && <> · DNI {profile.dni}</>}
+      </p>
 
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400/80">
         Mis reservas

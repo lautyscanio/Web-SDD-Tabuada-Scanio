@@ -8,7 +8,7 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [role, setRole] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState('')
 
@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
       setUser(firebaseUser)
 
       if (!firebaseUser) {
-        setRole(null)
+        setProfile(null)
         setLoading(false)
         return
       }
@@ -42,11 +42,11 @@ export function AuthProvider({ children }) {
             signOut(auth)
             return
           }
-          setRole(data?.role ?? null)
+          setProfile(data)
           setLoading(false)
         },
         () => {
-          setRole(null)
+          setProfile(null)
           setLoading(false)
         },
       )
@@ -58,9 +58,15 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const displayName = profile?.nombre
+    ? `${profile.nombre} ${profile.apellido ?? ''}`.trim()
+    : (user?.email ?? '')
+
   const value = {
     user,
-    role,
+    profile,
+    role: profile?.role ?? null,
+    displayName,
     loading,
     authError,
     clearAuthError: () => setAuthError(''),

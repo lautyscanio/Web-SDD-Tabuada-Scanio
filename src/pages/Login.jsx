@@ -19,11 +19,19 @@ function messageFor(err) {
   return ERROR_MESSAGES[err?.code] ?? 'Ocurrió un error inesperado. Intentá de nuevo.'
 }
 
+const inputClass =
+  'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-slate-100 outline-none transition focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20'
+const labelClass = 'mb-1 block text-xs font-medium text-slate-400'
+
 export default function Login() {
   const { authError, clearAuthError } = useAuth()
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmarPassword, setConfirmarPassword] = useState('')
+  const [nombre, setNombre] = useState('')
+  const [apellido, setApellido] = useState('')
+  const [dni, setDni] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -31,6 +39,18 @@ export default function Login() {
     event.preventDefault()
     setError('')
     clearAuthError()
+
+    if (mode === 'signup') {
+      if (password !== confirmarPassword) {
+        setError('Las contraseñas no coinciden.')
+        return
+      }
+      if (!nombre.trim() || !apellido.trim() || !dni.trim()) {
+        setError('Completá nombre, apellido y DNI.')
+        return
+      }
+    }
+
     setSubmitting(true)
     try {
       if (mode === 'signup') {
@@ -38,6 +58,9 @@ export default function Login() {
         await setDoc(doc(db, 'users', credential.user.uid), {
           email,
           role: 'cliente',
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+          dni: dni.trim(),
           createdAt: new Date().toISOString(),
         })
       } else {
@@ -56,7 +79,7 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0d14] px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0d14] px-4 py-10">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 flex h-3 gap-2 px-4 opacity-30"
         aria-hidden="true"
@@ -88,8 +111,56 @@ export default function Login() {
           onSubmit={handleSubmit}
           className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl shadow-black/40 backdrop-blur"
         >
+          {mode === 'signup' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="nombre" className={labelClass}>
+                  Nombre
+                </label>
+                <input
+                  id="nombre"
+                  required
+                  autoComplete="given-name"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="apellido" className={labelClass}>
+                  Apellido
+                </label>
+                <input
+                  id="apellido"
+                  required
+                  autoComplete="family-name"
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          )}
+
+          {mode === 'signup' && (
+            <div>
+              <label htmlFor="dni" className={labelClass}>
+                DNI
+              </label>
+              <input
+                id="dni"
+                required
+                inputMode="numeric"
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
+                placeholder="12345678"
+                className={inputClass}
+              />
+            </div>
+          )}
+
           <div>
-            <label htmlFor="email" className="mb-1 block text-xs font-medium text-slate-400">
+            <label htmlFor="email" className={labelClass}>
               Email
             </label>
             <input
@@ -100,12 +171,12 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vos@ejemplo.com"
-              className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-slate-100 outline-none transition focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-xs font-medium text-slate-400">
+            <label htmlFor="password" className={labelClass}>
               Contraseña
             </label>
             <input
@@ -117,9 +188,28 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-slate-100 outline-none transition focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20"
+              className={inputClass}
             />
           </div>
+
+          {mode === 'signup' && (
+            <div>
+              <label htmlFor="confirmarPassword" className={labelClass}>
+                Confirmar contraseña
+              </label>
+              <input
+                id="confirmarPassword"
+                type="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                placeholder="••••••••"
+                className={inputClass}
+              />
+            </div>
+          )}
 
           {(error || authError) && (
             <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">

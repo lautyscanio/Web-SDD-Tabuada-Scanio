@@ -8,10 +8,17 @@ operaciones, ni manipulando el frontend a mano.
 
 ## Reglas de negocio
 
-- Alta: los usuarios comunes se registran solos (ya implementado en el
-  módulo de auth) — el admin NO da de alta usuarios nuevos a mano, pero
-  puede editar/dar de baja los que ya existen.
-- Listado: admin ve todos los `users` (email, rol, fecha de creación).
+- Alta de clientes: se registran solos (módulo de auth).
+- Alta de admins: **amendment 2026-07-06** — un admin logueado SÍ puede
+  dar de alta directamente a otro admin (email, contraseña, nombre,
+  apellido, DNI) desde esta pantalla, sin que esa persona tenga que
+  autoregistrarse primero. Implementación: una instancia secundaria de
+  Firebase Auth (`src/lib/createUserAsAdmin.js`) crea la cuenta nueva sin
+  cerrar la sesión del admin que la está creando (si se usara la
+  instancia principal, el SDK autologuearía al admin actual como el
+  usuario recién creado). Firestore rules ajustadas: `isAdmin()` puede
+  crear el doc de perfil de cualquier `userId`, no solo el propio.
+- Listado: admin ve todos los `users` (nombre, email, DNI, rol, estado).
 - Modificación: admin puede cambiar el `role` de un usuario (`cliente` ↔
   `admin`).
 - Baja: admin puede "deshabilitar" un usuario (no se borra el registro de

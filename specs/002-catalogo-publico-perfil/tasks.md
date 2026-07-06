@@ -93,3 +93,19 @@ con una butaca ya ocupada rechazada completa (sigue en 2, no en 3).
 
 MVP = Setup + Foundational + US1 (navegar sin cuenta). Incremental:
 US1 → US2 (gate al confirmar) → US3 (multi-butaca) → US4 (perfil) → Polish.
+
+## Bug encontrado y arreglado (2026-07-06, post-entrega)
+
+- [x] **T015 (bug crítico)**: pantalla en blanco al salir de una función y
+      volver a entrar a la misma. Causa: `loading` (ligado solo al
+      listener de `boletos`) podía volverse `false` antes de que
+      resolviera el `getDoc` de la sala (más probable en la segunda
+      visita, por el cache local de Firestore), y el render intentaba
+      `sala.filas` con `sala` todavía en `null`. Fix: `salaLoading`
+      separado, gate del render en ambos + guarda defensiva `!sala`.
+- [x] **T016 (UX)**: header rediseñado — se sacó el texto "Sin cuenta —
+      podés navegar igual" (reemplazado por un botón claro "Iniciar
+      sesión"), se sacó la etiqueta de rol al lado del nombre (confundía),
+      se muestra nombre+apellido en vez de email, y "Mi perfil" pasó de
+      ser un tab más a un botón arriba a la derecha junto al nombre y
+      logout.

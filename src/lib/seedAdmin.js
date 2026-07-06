@@ -23,6 +23,8 @@ export async function seedAdminIfMissing() {
     await setDoc(doc(db, 'users', credential.user.uid), {
       email: ADMIN_EMAIL,
       role: 'admin',
+      nombre: 'Administrador',
+      apellido: '',
       createdAt: new Date().toISOString(),
     })
     await setDoc(flagDoc, { seeded: true })
