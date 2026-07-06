@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Usuarios from './pages/admin/Usuarios'
 import Cines from './pages/admin/Cines'
+import FuncionesList from './pages/cliente/FuncionesList'
+import Butacas from './pages/cliente/Butacas'
 
 const ADMIN_TABS = [
   { id: 'usuarios', label: 'Usuarios' },
@@ -52,6 +54,7 @@ function Header({ user, role, onLogout, tab, onTabChange }) {
 function AuthGate() {
   const { user, role, loading, logout } = useAuth()
   const [tab, setTab] = useState('usuarios')
+  const [funcionSeleccionada, setFuncionSeleccionada] = useState(null)
 
   if (loading) {
     return (
@@ -74,10 +77,10 @@ function AuthGate() {
         ) : (
           <Usuarios />
         )
+      ) : funcionSeleccionada ? (
+        <Butacas funcion={funcionSeleccionada} onBack={() => setFuncionSeleccionada(null)} />
       ) : (
-        <div className="mx-auto max-w-md p-6 text-center text-slate-400">
-          <p>La compra de entradas se agrega en el próximo módulo.</p>
-        </div>
+        <FuncionesList onSelect={setFuncionSeleccionada} />
       )}
     </div>
   )
