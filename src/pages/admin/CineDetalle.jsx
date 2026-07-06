@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 
-function useLiveCollection(name) {
+const inputClass =
+  'rounded-md border border-white/10 bg-black/30 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60'
+
+function useLiveCollection(name, cineId) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const q = query(collection(db, name), where('cineId', '==', cineId))
     const unsubscribe = onSnapshot(
-      collection(db, name),
+      q,
       (snap) => {
         setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
         setLoading(false)
@@ -16,7 +20,7 @@ function useLiveCollection(name) {
       () => setLoading(false),
     )
     return unsubscribe
-  }, [name])
+  }, [name, cineId])
 
   return { items, loading }
 }
@@ -50,81 +54,7 @@ function ListRow({ label, sub, onDelete }) {
   )
 }
 
-const inputClass =
-  'rounded-md border border-white/10 bg-black/30 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60'
-
-function CinesSection({ cines }) {
-  const [nombre, setNombre] = useState('')
-  const [ubicacion, setUbicacion] = useState('')
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!nombre.trim() || !ubicacion.trim()) {
-      setError('Completá nombre y ubicación.')
-      return
-    }
-    setSubmitting(true)
-    setError('')
-    try {
-      await addDoc(collection(db, 'cines'), { nombre: nombre.trim(), ubicacion: ubicacion.trim() })
-      setNombre('')
-      setUbicacion('')
-    } catch {
-      setError('No se pudo crear el cine.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleDelete(id) {
-    try {
-      await deleteDoc(doc(db, 'cines', id))
-    } catch {
-      setError('No se pudo borrar el cine.')
-    }
-  }
-
-  return (
-    <Section title="Cines">
-      <form onSubmit={handleSubmit} className="mb-3 flex flex-wrap gap-2">
-        <input
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Nombre"
-          className={`flex-1 min-w-[120px] ${inputClass}`}
-        />
-        <input
-          value={ubicacion}
-          onChange={(e) => setUbicacion(e.target.value)}
-          placeholder="Ubicación"
-          className={`flex-1 min-w-[120px] ${inputClass}`}
-        />
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-amber-300 disabled:opacity-50"
-        >
-          Agregar
-        </button>
-      </form>
-      {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
-      {cines.length === 0 ? (
-        <p className="text-sm text-slate-500">Sin cines todavía.</p>
-      ) : (
-        <ul>
-          {cines.map((c) => (
-            <ListRow key={c.id} label={c.nombre} sub={c.ubicacion} onDelete={() => handleDelete(c.id)} />
-          ))}
-        </ul>
-      )}
-    </Section>
-  )
-}
-
-function SalasSection({ cines, salas }) {
-  const [cineId, setCineId] = useState('')
+function SalasSection({ cine, salas }) {
   const [nombre, setNombre] = useState('')
   const [filas, setFilas] = useState('8')
   const [columnas, setColumnas] = useState('10')
@@ -135,10 +65,6 @@ function SalasSection({ cines, salas }) {
     e.preventDefault()
     const f = Number(filas)
     const c = Number(columnas)
-    if (!cineId) {
-      setError('Elegí un cine.')
-      return
-    }
     if (!nombre.trim() || !Number.isInteger(f) || f <= 0 || !Number.isInteger(c) || c <= 0) {
       setError('Completá nombre y filas/columnas numéricas.')
       return
@@ -146,7 +72,7 @@ function SalasSection({ cines, salas }) {
     setSubmitting(true)
     setError('')
     try {
-      await addDoc(collection(db, 'salas'), { cineId, nombre: nombre.trim(), filas: f, columnas: c })
+      await addDoc(collection(db, 'salas'), { cineId: cine.id, nombre: nombre.trim(), filas: f, columnas: c })
       setNombre('')
     } catch {
       setError('No se pudo crear la sala.')
@@ -163,21 +89,9 @@ function SalasSection({ cines, salas }) {
     }
   }
 
-  function cineName(id) {
-    return cines.find((c) => c.id === id)?.nombre ?? 'cine eliminado'
-  }
-
   return (
     <Section title="Salas">
       <form onSubmit={handleSubmit} className="mb-3 flex flex-wrap gap-2">
-        <select value={cineId} onChange={(e) => setCineId(e.target.value)} className={inputClass}>
-          <option value="">Cine…</option>
-          {cines.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
         <input
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
@@ -200,13 +114,12 @@ function SalasSection({ cines, salas }) {
         />
         <button
           type="submit"
-          disabled={submitting || cines.length === 0}
+          disabled={submitting}
           className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-amber-300 disabled:opacity-50"
         >
           Agregar
         </button>
       </form>
-      {cines.length === 0 && <p className="mb-2 text-xs text-slate-500">Cargá un cine primero.</p>}
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
       {salas.length === 0 ? (
         <p className="text-sm text-slate-500">Sin salas todavía.</p>
@@ -215,7 +128,7 @@ function SalasSection({ cines, salas }) {
           {salas.map((s) => (
             <ListRow
               key={s.id}
-              label={`${s.nombre} · ${cineName(s.cineId)}`}
+              label={s.nombre}
               sub={`${s.filas}x${s.columnas} butacas`}
               onDelete={() => handleDelete(s.id)}
             />
@@ -226,33 +139,43 @@ function SalasSection({ cines, salas }) {
   )
 }
 
-function FuncionesSection({ cines, salas, funciones }) {
-  const [cineId, setCineId] = useState('')
+const IDIOMA_OPCIONES = [
+  { value: '', label: 'Idioma (opcional)…' },
+  { value: 'espanol', label: 'Doblada al español' },
+  { value: 'subtitulada', label: 'Subtitulada' },
+]
+
+function FuncionesSection({ cine, salas, funciones }) {
   const [salaId, setSalaId] = useState('')
   const [pelicula, setPelicula] = useState('')
   const [horario, setHorario] = useState('')
+  const [idioma, setIdioma] = useState('')
+  const [imagen, setImagen] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const salasDelCine = salas.filter((s) => s.cineId === cineId)
-
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!cineId || !salaId || !pelicula.trim() || !horario) {
-      setError('Completá cine, sala, película y horario.')
+    if (!salaId || !pelicula.trim() || !horario) {
+      setError('Completá sala, película y horario.')
       return
     }
     setSubmitting(true)
     setError('')
     try {
-      await addDoc(collection(db, 'funciones'), {
-        cineId,
+      const data = {
+        cineId: cine.id,
         salaId,
         pelicula: pelicula.trim(),
         horario,
-      })
+      }
+      if (idioma) data.idioma = idioma
+      if (imagen.trim()) data.imagen = imagen.trim()
+      await addDoc(collection(db, 'funciones'), data)
       setPelicula('')
       setHorario('')
+      setIdioma('')
+      setImagen('')
     } catch {
       setError('No se pudo crear la función.')
     } finally {
@@ -268,9 +191,6 @@ function FuncionesSection({ cines, salas, funciones }) {
     }
   }
 
-  function cineName(id) {
-    return cines.find((c) => c.id === id)?.nombre ?? 'cine eliminado'
-  }
   function salaName(id) {
     return salas.find((s) => s.id === id)?.nombre ?? 'sala eliminada'
   }
@@ -278,29 +198,9 @@ function FuncionesSection({ cines, salas, funciones }) {
   return (
     <Section title="Funciones">
       <form onSubmit={handleSubmit} className="mb-3 flex flex-wrap gap-2">
-        <select
-          value={cineId}
-          onChange={(e) => {
-            setCineId(e.target.value)
-            setSalaId('')
-          }}
-          className={inputClass}
-        >
-          <option value="">Cine…</option>
-          {cines.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
-        <select
-          value={salaId}
-          onChange={(e) => setSalaId(e.target.value)}
-          disabled={!cineId}
-          className={`${inputClass} disabled:opacity-40`}
-        >
+        <select value={salaId} onChange={(e) => setSalaId(e.target.value)} className={inputClass}>
           <option value="">Sala…</option>
-          {salasDelCine.map((s) => (
+          {salas.map((s) => (
             <option key={s.id} value={s.id}>
               {s.nombre}
             </option>
@@ -318,14 +218,28 @@ function FuncionesSection({ cines, salas, funciones }) {
           onChange={(e) => setHorario(e.target.value)}
           className={inputClass}
         />
+        <select value={idioma} onChange={(e) => setIdioma(e.target.value)} className={inputClass}>
+          {IDIOMA_OPCIONES.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <input
+          value={imagen}
+          onChange={(e) => setImagen(e.target.value)}
+          placeholder="Imagen (ej: matrix.jpg)"
+          className={`flex-1 min-w-[140px] ${inputClass}`}
+        />
         <button
           type="submit"
-          disabled={submitting || cines.length === 0}
+          disabled={submitting || salas.length === 0}
           className="rounded-md bg-amber-400 px-3 py-1.5 text-sm font-medium text-slate-900 transition hover:bg-amber-300 disabled:opacity-50"
         >
           Agregar
         </button>
       </form>
+      {salas.length === 0 && <p className="mb-2 text-xs text-slate-500">Cargá una sala primero.</p>}
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
       {funciones.length === 0 ? (
         <p className="text-sm text-slate-500">Sin funciones todavía.</p>
@@ -334,8 +248,8 @@ function FuncionesSection({ cines, salas, funciones }) {
           {funciones.map((f) => (
             <ListRow
               key={f.id}
-              label={`${f.pelicula} · ${cineName(f.cineId)} (${salaName(f.salaId)})`}
-              sub={f.horario}
+              label={f.pelicula}
+              sub={`${salaName(f.salaId)} · ${f.horario}${f.idioma ? ` · ${f.idioma === 'espanol' ? 'Doblada' : 'Subtitulada'}` : ''}${f.imagen ? ` · ${f.imagen}` : ''}`}
               onDelete={() => handleDelete(f.id)}
             />
           ))}
@@ -345,22 +259,26 @@ function FuncionesSection({ cines, salas, funciones }) {
   )
 }
 
-export default function Cines() {
-  const { items: cines, loading: loadingCines } = useLiveCollection('cines')
-  const { items: salas, loading: loadingSalas } = useLiveCollection('salas')
-  const { items: funciones, loading: loadingFunciones } = useLiveCollection('funciones')
-
-  if (loadingCines || loadingSalas || loadingFunciones) {
-    return <p className="p-6 text-slate-400">Cargando…</p>
-  }
+export default function CineDetalle({ cine, onBack }) {
+  const { items: salas, loading: loadingSalas } = useLiveCollection('salas', cine.id)
+  const { items: funciones, loading: loadingFunciones } = useLiveCollection('funciones', cine.id)
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-4 p-6 md:grid-cols-2">
-      <div className="md:col-span-2">
-        <CinesSection cines={cines} />
-      </div>
-      <SalasSection cines={cines} salas={salas} />
-      <FuncionesSection cines={cines} salas={salas} funciones={funciones} />
+    <div className="mx-auto max-w-3xl p-6">
+      <button type="button" onClick={onBack} className="mb-4 text-sm text-slate-400 hover:text-slate-200">
+        ← Volver a cines
+      </button>
+      <h2 className="mb-1 font-display text-3xl tracking-wide text-slate-100">{cine.nombre}</h2>
+      <p className="mb-6 text-sm text-slate-500">{cine.ubicacion}</p>
+
+      {loadingSalas || loadingFunciones ? (
+        <p className="text-slate-400">Cargando…</p>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          <SalasSection cine={cine} salas={salas} />
+          <FuncionesSection cine={cine} salas={salas} funciones={funciones} />
+        </div>
+      )}
     </div>
   )
 }

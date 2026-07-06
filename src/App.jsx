@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Usuarios from './pages/admin/Usuarios'
-import Cines from './pages/admin/Cines'
+import AdminCinesList from './pages/admin/CinesList'
+import CineDetalle from './pages/admin/CineDetalle'
 import CinesList from './pages/cliente/CinesList'
 import FuncionesDeCine from './pages/cliente/FuncionesDeCine'
 import Butacas from './pages/cliente/Butacas'
@@ -75,6 +76,15 @@ function CatalogoPublico() {
   return <CinesList onSelect={setCine} />
 }
 
+function AdminCines() {
+  const [cine, setCine] = useState(null)
+
+  if (cine) {
+    return <CineDetalle cine={cine} onBack={() => setCine(null)} />
+  }
+  return <AdminCinesList onSelect={setCine} />
+}
+
 function Root() {
   const { user, role, loading, logout } = useAuth()
   const [adminTab, setAdminTab] = useState('usuarios')
@@ -97,7 +107,7 @@ function Root() {
       <Header user={user} role={role} tab={tab} onTabChange={onTabChange} onLogout={logout} />
       {isAdmin ? (
         adminTab === 'cines' ? (
-          <Cines />
+          <AdminCines />
         ) : (
           <Usuarios />
         )

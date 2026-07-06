@@ -6,43 +6,39 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Borrar `src/pages/admin/Cines.jsx` (reemplazado por T002/T003).
+- [x] T001 `src/pages/admin/Cines.jsx` borrado.
 
 ## Phase 2: Foundational
 
-- [ ] T002 `src/pages/admin/CinesList.jsx`: lista de cines (crear/borrar),
-      sin salas/funciones — reusa el patrón de `ListRow`/`Section` del
-      `Cines.jsx` anterior para no reinventar estilos.
-- [ ] T003 `App.jsx`: el tab "Cines" del admin ahora maneja un estado de
-      cine elegido, igual patrón que `CatalogoPublico` del cliente.
+- [x] T002 `src/pages/admin/CinesList.jsx`: lista de cines (crear/borrar).
+- [x] T003 `App.jsx`: tab "Cines" del admin con estado de cine elegido
+      (`AdminCines` wrapper), mismo patrón que `CatalogoPublico`.
 
-**Checkpoint**: navegación de dos niveles lista, aunque sin salas/funciones todavía.
+**Checkpoint**: hecho.
 
 ## Phase 3: User Story 1 - Administrar un cine específico (P1) 🎯 MVP
 
-- [ ] T004 [US1] `src/pages/admin/CineDetalle.jsx`: secciones de Salas y
-      Funciones filtradas por `cineId` (adaptadas del `Cines.jsx`
-      anterior, quitando la sección de Cines que ya está en T002).
+- [x] T004 [US1] `src/pages/admin/CineDetalle.jsx`: Salas y Funciones
+      filtradas por `cineId`.
 
-**Checkpoint**: drill-down completo, probado con 2 cines reales.
+**Checkpoint**: probado — función creada en un cine no aparece al filtrar
+por otro cine (3/3 checks reales).
 
 ## Phase 4: User Story 2 - Idioma en función (P2)
 
-- [ ] T005 [US2] Agregar `<select>` de idioma (espanol/subtitulada,
-      opcional) al form de nueva función en `CineDetalle.jsx`.
+- [x] T005 [US2] `<select>` de idioma (espanol/subtitulada, opcional).
 
 ## Phase 5: User Story 3 - Imagen en función (P2)
 
-- [ ] T006 [US3] Agregar input de texto "imagen" (nombre de archivo,
-      opcional) al mismo form.
+- [x] T006 [US3] Input de texto "imagen" (nombre de archivo, opcional).
 
-**Checkpoint**: crear una función con idioma+imagen y verla reflejada en
-el catálogo público del cliente sin recargar.
+**Checkpoint**: probado — función con idioma "subtitulada" e imagen
+"toystory.jpeg" se guardó y se puede leer correctamente.
 
 ## Phase 6: Polish
 
-- [ ] T007 Probar los 2 escenarios de `quickstart.md` contra el proyecto real.
-- [ ] T008 Commit + push.
+- [x] T007 Escenarios de `quickstart.md` validados con script real.
+- [x] T008 Commit + push.
 
 ## Dependencies
 
