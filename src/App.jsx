@@ -1,37 +1,48 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import Login from './pages/Login'
 import Usuarios from './pages/admin/Usuarios'
 import Cines from './pages/admin/Cines'
-import FuncionesList from './pages/cliente/FuncionesList'
+import CinesList from './pages/cliente/CinesList'
+import FuncionesDeCine from './pages/cliente/FuncionesDeCine'
 import Butacas from './pages/cliente/Butacas'
+import Perfil from './pages/cliente/Perfil'
 
 const ADMIN_TABS = [
   { id: 'usuarios', label: 'Usuarios' },
   { id: 'cines', label: 'Cines' },
 ]
 
-function Header({ user, role, onLogout, tab, onTabChange }) {
+function Header({ user, role, tab, onTabChange, onLogout }) {
+  const tabs = role === 'admin' ? ADMIN_TABS : [{ id: 'catalogo', label: 'Cines' }, { id: 'perfil', label: 'Mi perfil' }]
+
   return (
     <header className="border-b border-white/10 bg-white/[0.02]">
       <div className="flex items-center justify-between px-6 py-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400/80">Gestión de Cine</p>
+        <p className="font-display text-sm uppercase tracking-[0.35em] text-amber-400/80">
+          Gestión de Cine
+        </p>
         <div className="flex items-center gap-3 text-sm text-slate-400">
-          <span>
-            {user.email} · <span className="text-amber-400">{role ?? 'sin rol'}</span>
-          </span>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-md border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:bg-white/5"
-          >
-            Cerrar sesión
-          </button>
+          {user ? (
+            <>
+              <span>
+                {user.email} · <span className="text-amber-400">{role ?? 'sin rol'}</span>
+              </span>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="rounded-md border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:bg-white/5"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
+            <span className="text-slate-500">Sin cuenta — podés navegar igual</span>
+          )}
         </div>
       </div>
-      {role === 'admin' && (
+      {(role === 'admin' || user) && (
         <nav className="flex gap-1 px-6 pb-2">
-          {ADMIN_TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
@@ -51,10 +62,23 @@ function Header({ user, role, onLogout, tab, onTabChange }) {
   )
 }
 
-function AuthGate() {
+function CatalogoPublico() {
+  const [cine, setCine] = useState(null)
+  const [funcion, setFuncion] = useState(null)
+
+  if (funcion) {
+    return <Butacas funcion={funcion} onBack={() => setFuncion(null)} />
+  }
+  if (cine) {
+    return <FuncionesDeCine cine={cine} onBack={() => setCine(null)} onSelect={setFuncion} />
+  }
+  return <CinesList onSelect={setCine} />
+}
+
+function Root() {
   const { user, role, loading, logout } = useAuth()
-  const [tab, setTab] = useState('usuarios')
-  const [funcionSeleccionada, setFuncionSeleccionada] = useState(null)
+  const [adminTab, setAdminTab] = useState('usuarios')
+  const [clienteTab, setClienteTab] = useState('catalogo')
 
   if (loading) {
     return (
@@ -64,23 +88,23 @@ function AuthGate() {
     )
   }
 
-  if (!user) {
-    return <Login />
-  }
+  const isAdmin = role === 'admin'
+  const tab = isAdmin ? adminTab : clienteTab
+  const onTabChange = isAdmin ? setAdminTab : setClienteTab
 
   return (
     <div className="min-h-screen bg-[#0b0d14]">
-      <Header user={user} role={role} onLogout={logout} tab={tab} onTabChange={setTab} />
-      {role === 'admin' ? (
-        tab === 'cines' ? (
+      <Header user={user} role={role} tab={tab} onTabChange={onTabChange} onLogout={logout} />
+      {isAdmin ? (
+        adminTab === 'cines' ? (
           <Cines />
         ) : (
           <Usuarios />
         )
-      ) : funcionSeleccionada ? (
-        <Butacas funcion={funcionSeleccionada} onBack={() => setFuncionSeleccionada(null)} />
+      ) : clienteTab === 'perfil' && user ? (
+        <Perfil />
       ) : (
-        <FuncionesList onSelect={setFuncionSeleccionada} />
+        <CatalogoPublico />
       )}
     </div>
   )
@@ -89,7 +113,7 @@ function AuthGate() {
 function App() {
   return (
     <AuthProvider>
-      <AuthGate />
+      <Root />
     </AuthProvider>
   )
 }

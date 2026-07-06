@@ -45,18 +45,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Lectura pública (sin login): catálogo de cines/salas/funciones y el
+    // mapa de butacas ocupadas — navegar y ver disponibilidad no requiere
+    // cuenta (módulo catálogo público). La escritura sigue exigiendo admin.
     match /cines/{cineId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /salas/{salaId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /funciones/{funcionId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -64,7 +67,7 @@ service cloud.firestore {
     // "update" (solo admin) — refuerzo a nivel reglas de la transacción
     // atómica del módulo de compra de entradas.
     match /boletos/{ticketId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }

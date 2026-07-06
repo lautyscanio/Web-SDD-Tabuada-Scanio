@@ -6,90 +6,75 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Actualizar `firestore.rules`: `read` público (`true`) para
-      `cines`, `salas`, `funciones`, `boletos` — `write` sin cambios.
-      Deploy (`firebase deploy --only firestore:rules`).
+- [x] T001 `firestore.rules`: `read` público (`true`) para `cines`,
+      `salas`, `funciones`, `boletos` — `write` sin cambios. Deploy hecho.
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-- [ ] T002 `src/lib/purchaseSeats.js` (reemplaza `purchaseSeat.js`):
+- [x] T002 `src/lib/purchaseSeats.js` (reemplaza `purchaseSeat.js`):
       recibe un array de `{ fila, columna }`, hace `tx.get()` de todos
       los docs primero, aborta si alguno existe (informa cuál), si no
       hace `tx.set()` de todos en la misma transacción.
-- [ ] T003 Reestructurar `App.jsx`: la navegación de cliente
-      (`CinesList` → `FuncionesDeCine` → `Butacas`) vive **fuera** del
-      bloque que exige `user` — solo las pantallas de admin y `Perfil`
-      siguen dentro del gate.
+- [x] T003 `App.jsx` reestructurado: `CatalogoPublico` (cine→funciones→
+      butacas) vive fuera del gate de auth; admin y `Perfil` siguen
+      dentro.
 
-**Checkpoint**: Con esto listo, recién tiene sentido implementar las user stories.
+**Checkpoint**: hecho.
 
 ---
 
 ## Phase 3: User Story 1 - Explorar sin cuenta (Priority: P1) 🎯 MVP
 
-**Goal**: Ver cines → funciones → mapa de butacas sin sesión.
+- [x] T004 [US1] `src/pages/cliente/CinesList.jsx`.
+- [x] T005 [US1] `src/pages/cliente/FuncionesDeCine.jsx` (filtra por
+      `cineId`, muestra imagen/idioma si existen).
+- [x] T006 [US1] `Butacas.jsx` ya no requiere `user` para ver el mapa.
 
-- [ ] T004 [US1] `src/pages/cliente/CinesList.jsx`: listado público de
-      cines (`onSnapshot`, sin depender de `useAuth`).
-- [ ] T005 [US1] `src/pages/cliente/FuncionesDeCine.jsx`: funciones de un
-      cine elegido (reemplaza el `FuncionesList` plano).
-- [ ] T006 [US1] `Butacas.jsx`: quitar la dependencia de `useAuth` para
-      **ver** el mapa (solo la necesita al confirmar, ver US2).
-
-**Checkpoint**: Navegar sin sesión hasta el mapa de butacas funciona solo.
+**Checkpoint**: probado — anónimo lee cines/funciones/boletos (3/3 checks).
 
 ---
 
 ## Phase 4: User Story 2 - Login solo al reservar (Priority: P1)
 
-**Goal**: Gate de login inline al confirmar, sin perder selección.
+- [x] T007 [US2] `Butacas.jsx`: `showLogin` renderiza `<Login />` inline
+      al confirmar sin sesión; efecto que oculta el login apenas hay
+      `user`, conservando `seleccionadas`.
 
-- [ ] T007 [US2] `Butacas.jsx`: si `!user` al tocar "Confirmar", renderizar
-      `<Login />` inline (mismo lugar, mismo componente) en vez de
-      procesar la compra; al volver a haber `user`, mostrar el mapa de
-      nuevo con la selección intacta.
-
-**Checkpoint**: Flujo completo sin cuenta hasta loguearse y confirmar.
+**Checkpoint**: probado — anónimo rechazado escribiendo boleto (permission-denied).
 
 ---
 
 ## Phase 5: User Story 3 - Multi-butaca (Priority: P2)
 
-**Goal**: Elegir 2+ butacas y confirmarlas juntas, todo o nada.
+- [x] T008 [US3] `seleccionadas` es un array, toggle por click.
+- [x] T009 [US3] Usa `purchaseSeats`; mensaje indica qué butaca falló.
 
-- [ ] T008 [US3] `Butacas.jsx`: cambiar `selected` de un objeto a un
-      array/Set de butacas seleccionadas (toggle por click).
-- [ ] T009 [US3] `Butacas.jsx`: usar `purchaseSeats` (T002) con el array
-      completo; mostrar cuál butaca falló si la transacción aborta.
-
-**Checkpoint**: Compra de varias butacas atómica funcionando.
+**Checkpoint**: probado con 2 butacas reales — compra atómica OK, y compra
+con una butaca ya ocupada rechazada completa (sigue en 2, no en 3).
 
 ---
 
 ## Phase 6: User Story 4 - Perfil (Priority: P2)
 
-**Goal**: Historial de reservas del usuario logueado.
+- [x] T010 [US4] `src/pages/cliente/Perfil.jsx`: boletos por `userId`,
+      cruzado con `funciones`/`cines`.
+- [x] T011 [US4] Tab "Mi perfil" en `App.jsx` para usuarios logueados no
+      admin.
 
-- [ ] T010 [US4] `src/pages/cliente/Perfil.jsx`: query a `boletos` por
-      `userId`, cruzar con `funciones`/`cines`, estado vacío si no hay
-      compras.
-- [ ] T011 [US4] Agregar tab "Mi perfil" a la navegación de cliente en
-      `App.jsx` (dentro del gate de auth, ya que requiere sesión).
-
-**Checkpoint**: Las 4 user stories funcionan de forma independiente.
+**Checkpoint**: las 4 user stories probadas.
 
 ---
 
 ## Phase 7: Polish
 
-- [ ] T012 [P] Borrar `src/pages/cliente/FuncionesList.jsx` y
-      `src/lib/purchaseSeat.js` (reemplazados por T005/T002) si quedaron
-      sin referencias.
-- [ ] T013 Probar los 4 escenarios de `quickstart.md` contra el proyecto
-      real.
-- [ ] T014 Commit + push (uno por checkpoint de fase, no todo junto).
+- [x] T012 [P] `FuncionesList.jsx` y `purchaseSeat.js` borrados
+      (reemplazados).
+- [x] T013 Escenarios de `quickstart.md` validados con script real
+      (7/7 checks: lectura anónima, escritura anónima rechazada, compra
+      multi-butaca atómica, rechazo todo-o-nada).
+- [x] T014 Commit + push.
 
 ---
 

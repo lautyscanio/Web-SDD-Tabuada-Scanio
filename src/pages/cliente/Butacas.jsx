@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { collection, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAuth } from '../../context/AuthContext'
-import { purchaseSeat } from '../../lib/purchaseSeat'
+import { purchaseSeats } from '../../lib/purchaseSeats'
+import Login from '../Login'
+
+function seatKey(fila, columna) {
+  return `${fila}-${columna}`
+}
 
 export default function Butacas({ funcion, onBack }) {
   const { user } = useAuth()
@@ -10,10 +15,11 @@ export default function Butacas({ funcion, onBack }) {
   const [salaError, setSalaError] = useState(false)
   const [ocupadas, setOcupadas] = useState(new Set())
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState(null)
+  const [seleccionadas, setSeleccionadas] = useState([])
   const [purchasing, setPurchasing] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -34,7 +40,7 @@ export default function Butacas({ funcion, onBack }) {
     const unsubscribe = onSnapshot(
       seatsQuery,
       (snap) => {
-        setOcupadas(new Set(snap.docs.map((d) => `${d.data().fila}-${d.data().columna}`)))
+        setOcupadas(new Set(snap.docs.map((d) => seatKey(d.data().fila, d.data().columna))))
         setLoading(false)
       },
       () => {
@@ -45,22 +51,42 @@ export default function Butacas({ funcion, onBack }) {
     return unsubscribe
   }, [funcion.id])
 
+  // Si vuelve a haber sesión (se logueó/registró durante el gate), volver
+  // al mapa de butacas manteniendo la selección — un clic más confirma.
+  useEffect(() => {
+    if (user && showLogin) setShowLogin(false)
+  }, [user, showLogin])
+
+  function toggleSeat(fila, columna) {
+    const key = seatKey(fila, columna)
+    setSeleccionadas((prev) =>
+      prev.some((s) => seatKey(s.fila, s.columna) === key)
+        ? prev.filter((s) => seatKey(s.fila, s.columna) !== key)
+        : [...prev, { fila, columna }],
+    )
+  }
+
+  function handleConfirmarClick() {
+    if (seleccionadas.length === 0) return
+    if (!user) {
+      setShowLogin(true)
+      return
+    }
+    confirmarCompra()
+  }
+
   async function confirmarCompra() {
-    if (!selected) return
     setPurchasing(true)
     setError('')
     try {
-      await purchaseSeat({
-        funcionId: funcion.id,
-        fila: selected.fila,
-        columna: selected.columna,
-        userId: user.uid,
-      })
+      await purchaseSeats({ funcionId: funcion.id, seats: seleccionadas, userId: user.uid })
       setSuccess(true)
-      setSelected(null)
+      setSeleccionadas([])
     } catch (err) {
       if (err.message === 'SEAT_TAKEN') {
-        setError('Justo la agarraron — esa butaca ya no está libre. Elegí otra.')
+        setError(
+          `Justo agarraron la butaca ${err.seat.fila}-${err.seat.columna} — no se reservó ninguna. Elegí otra combinación.`,
+        )
       } else {
         setError('No se pudo confirmar la compra. Intentá de nuevo.')
       }
@@ -74,9 +100,30 @@ export default function Butacas({ funcion, onBack }) {
     return (
       <div className="p-6">
         <button type="button" onClick={onBack} className="mb-4 text-sm text-slate-400 hover:text-slate-200">
-          ← Volver a funciones
+          ← Volver
         </button>
         <p className="text-red-400">No se encontró la sala de esta función.</p>
+      </div>
+    )
+  }
+
+  if (showLogin) {
+    return (
+      <div>
+        <p className="mx-auto max-w-sm px-6 pt-6 text-center text-sm text-slate-400">
+          Iniciá sesión o registrate para confirmar {seleccionadas.length}{' '}
+          {seleccionadas.length === 1 ? 'butaca' : 'butacas'} — tu selección queda guardada.
+        </p>
+        <Login />
+        <p className="pb-6 text-center">
+          <button
+            type="button"
+            onClick={() => setShowLogin(false)}
+            className="text-sm text-slate-500 hover:text-slate-300"
+          >
+            ← Volver al mapa de butacas
+          </button>
+        </p>
       </div>
     )
   }
@@ -89,12 +136,12 @@ export default function Butacas({ funcion, onBack }) {
       <button type="button" onClick={onBack} className="mb-4 text-sm text-slate-400 hover:text-slate-200">
         ← Volver a funciones
       </button>
-      <h2 className="mb-1 text-xl font-semibold text-slate-100">{funcion.pelicula}</h2>
+      <h2 className="mb-1 font-display text-3xl tracking-wide text-slate-100">{funcion.pelicula}</h2>
       <p className="mb-4 text-sm text-slate-500">{funcion.horario}</p>
 
       {success && (
         <p className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
-          ¡Entrada confirmada!
+          ¡Entrada(s) confirmada(s)!
         </p>
       )}
       {error && (
@@ -113,15 +160,15 @@ export default function Butacas({ funcion, onBack }) {
         {filas.map((fila) => (
           <div key={fila} className="flex justify-center gap-1">
             {columnas.map((col) => {
-              const key = `${fila}-${col}`
+              const key = seatKey(fila, col)
               const taken = ocupadas.has(key)
-              const isSelected = selected?.fila === fila && selected?.columna === col
+              const isSelected = seleccionadas.some((s) => seatKey(s.fila, s.columna) === key)
               return (
                 <button
                   key={col}
                   type="button"
                   disabled={taken}
-                  onClick={() => setSelected({ fila, columna: col })}
+                  onClick={() => toggleSeat(fila, col)}
                   className={`h-6 w-6 shrink-0 rounded-[4px] text-[9px] transition ${
                     taken
                       ? 'cursor-not-allowed bg-red-500/70 text-red-950'
@@ -153,15 +200,15 @@ export default function Butacas({ funcion, onBack }) {
       <div className="text-center">
         <button
           type="button"
-          disabled={!selected || purchasing}
-          onClick={confirmarCompra}
+          disabled={seleccionadas.length === 0 || purchasing}
+          onClick={handleConfirmarClick}
           className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {purchasing
             ? 'Confirmando…'
-            : selected
-              ? `Confirmar butaca ${selected.fila}-${selected.columna}`
-              : 'Elegí una butaca'}
+            : seleccionadas.length === 0
+              ? 'Elegí una o más butacas'
+              : `Confirmar ${seleccionadas.length} ${seleccionadas.length === 1 ? 'butaca' : 'butacas'}`}
         </button>
       </div>
     </div>
