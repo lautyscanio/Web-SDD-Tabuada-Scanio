@@ -12,6 +12,7 @@ function seatKey(fila, columna) {
 export default function Butacas({ funcion, onBack }) {
   const { user } = useAuth()
   const [sala, setSala] = useState(null)
+  const [salaLoading, setSalaLoading] = useState(true)
   const [salaError, setSalaError] = useState(false)
   const [ocupadas, setOcupadas] = useState(new Set())
   const [loading, setLoading] = useState(true)
@@ -23,13 +24,21 @@ export default function Butacas({ funcion, onBack }) {
 
   useEffect(() => {
     let cancelled = false
+    setSala(null)
+    setSalaLoading(true)
+    setSalaError(false)
     getDoc(doc(db, 'salas', funcion.salaId))
       .then((snap) => {
         if (cancelled) return
         if (snap.exists()) setSala(snap.data())
         else setSalaError(true)
+        setSalaLoading(false)
       })
-      .catch(() => !cancelled && setSalaError(true))
+      .catch(() => {
+        if (cancelled) return
+        setSalaError(true)
+        setSalaLoading(false)
+      })
     return () => {
       cancelled = true
     }
@@ -95,8 +104,8 @@ export default function Butacas({ funcion, onBack }) {
     }
   }
 
-  if (loading) return <p className="p-6 text-slate-400">Cargando butacas…</p>
-  if (salaError) {
+  if (loading || salaLoading) return <p className="p-6 text-slate-400">Cargando butacas…</p>
+  if (salaError || !sala) {
     return (
       <div className="p-6">
         <button type="button" onClick={onBack} className="mb-4 text-sm text-slate-400 hover:text-slate-200">
