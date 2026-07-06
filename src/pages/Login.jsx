@@ -23,6 +23,9 @@ const inputClass =
   'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-slate-100 outline-none transition focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20'
 const labelClass = 'mb-1 block text-xs font-medium text-slate-400'
 
+const soloLetras = (v) => v.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s]/g, '')
+const soloNumeros = (v) => v.replace(/\D/g, '')
+
 export default function Login() {
   const { authError, clearAuthError } = useAuth()
   const [mode, setMode] = useState('login')
@@ -47,6 +50,10 @@ export default function Login() {
       }
       if (!nombre.trim() || !apellido.trim() || !dni.trim()) {
         setError('Completá nombre, apellido y DNI.')
+        return
+      }
+      if (dni.trim().length < 7 || dni.trim().length > 8) {
+        setError('El DNI debe tener 7 u 8 dígitos.')
         return
       }
     }
@@ -122,7 +129,7 @@ export default function Login() {
                   required
                   autoComplete="given-name"
                   value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  onChange={(e) => setNombre(soloLetras(e.target.value))}
                   className={inputClass}
                 />
               </div>
@@ -135,7 +142,7 @@ export default function Login() {
                   required
                   autoComplete="family-name"
                   value={apellido}
-                  onChange={(e) => setApellido(e.target.value)}
+                  onChange={(e) => setApellido(soloLetras(e.target.value))}
                   className={inputClass}
                 />
               </div>
@@ -151,8 +158,9 @@ export default function Login() {
                 id="dni"
                 required
                 inputMode="numeric"
+                maxLength={8}
                 value={dni}
-                onChange={(e) => setDni(e.target.value)}
+                onChange={(e) => setDni(soloNumeros(e.target.value))}
                 placeholder="12345678"
                 className={inputClass}
               />

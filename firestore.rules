@@ -17,6 +17,19 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/meta/adminSeeded);
     }
 
+    // El admin seed (creado automáticamente al iniciar el sistema, ver
+    // módulo auth) es el único que puede quitarle el rol de admin —o
+    // borrar la cuenta— a OTRO admin. El resto de los admins hacen ABM
+    // normal (cines/salas/funciones/usuarios) pero no pueden tocar el
+    // estatus de otros admins.
+    function esAdminSeed() {
+      return request.auth.token.email == 'admin@gestioncine-scanio-tabuada.local';
+    }
+
+    function esDemocionDeAdmin() {
+      return resource.data.role == 'admin' && request.resource.data.role != 'admin';
+    }
+
     // Flag público mínimo para el chequeo de seed pre-login (ver módulo auth).
     match /meta/{doc} {
       allow read: if true;
@@ -39,15 +52,21 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Modificación (rol, disabled): solo admin, y ni el propio admin
-      // puede quitarse a sí mismo el rol de admin.
-      allow update: if isAdmin() && !(
-        request.auth.uid == userId &&
-        resource.data.role == 'admin' &&
-        request.resource.data.role != 'admin'
-      );
+      // Modificación (rol, disabled): solo admin. Ni el propio admin puede
+      // quitarse a sí mismo el rol de admin, y ningún admin "regular"
+      // puede quitarle el rol de admin a OTRO admin — eso es exclusivo
+      // del admin seed.
+      allow update: if isAdmin() &&
+        !(request.auth.uid == userId && esDemocionDeAdmin()) &&
+        !(request.auth.uid != userId && esDemocionDeAdmin() && !esAdminSeed());
 
-      allow delete: if false;
+      // Borrado del perfil (no borra la cuenta de Firebase Auth
+      // subyacente — eso requeriría Admin SDK/backend, fuera de alcance
+      // de un frontend puro; ver spec). Nadie se borra a sí mismo. Borrar
+      // a un admin es exclusivo del admin seed, igual que desadminizarlo.
+      allow delete: if isAdmin() && request.auth.uid != userId && (
+        resource.data.role != 'admin' || esAdminSeed()
+      );
     }
 
     // Lectura pública (sin login): catálogo de cines/salas/funciones y el
