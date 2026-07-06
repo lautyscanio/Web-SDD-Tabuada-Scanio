@@ -1,7 +1,7 @@
 import { app } from './firebase'
 
 function App() {
-  const firebaseReady = Boolean(app.options.projectId)
+  const firebaseReady = Boolean(app.options.projectId(
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100 px-4">
