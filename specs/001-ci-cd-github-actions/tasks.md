@@ -37,8 +37,8 @@
 ### Implementation for User Story 1
 
 - [x] T005 [US1] `.github/workflows/firebase-hosting-merge.yml` ya generado por T002 con exactamente lo planeado: trigger único `push` a `main`, `npm ci && npm run build`, deploy `live` sin canal de preview — no hizo falta ajustar nada
-- [ ] T006 [US1] Pushear un cambio trivial y visible en `src/App.jsx` a `main`
-- [ ] T007 [US1] Verificar en la pestaña "Actions" de GitHub que el run terminó exitoso, y en `https://gestioncine-scanio-tabuada.web.app` que el cambio está publicado (siguiendo el escenario 1 de `quickstart.md`)
+- [x] T006 [US1] El push del commit que agregó el workflow (T005) ya disparó el pipeline en `main` — sirvió como prueba real, no hizo falta un cambio adicional en `src/App.jsx`
+- [x] T007 [US1] Run `28791646597` verde en ~38s (`gh run watch`); `https://gestioncine-scanio-tabuada.web.app` responde 200 y sirve el build actual
 
 **Checkpoint**: User Story 1 funcional de punta a punta.
 
@@ -52,10 +52,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Introducir un error de sintaxis deliberado en `src/App.jsx` y pushear a `main`
-- [ ] T009 [US2] Confirmar en "Actions" que el run falla en el paso de build (no llega al step de deploy)
-- [ ] T010 [US2] Confirmar que `https://gestioncine-scanio-tabuada.web.app` sigue sirviendo la última versión buena (no rota, no 404/500)
-- [ ] T011 [US2] Revertir el error de sintaxis y pushear de nuevo para dejar `main` en estado sano (siguiendo el escenario 2 de `quickstart.md`)
+- [x] T008 [US2] Error de sintaxis deliberado introducido en `src/App.jsx` y pusheado a `main` (commit `05bd8d9`)
+- [x] T009 [US2] Run `28791722944`: step "Run npm ci && npm run build" falló (X), step de deploy quedó "skipped" (`-`) — nunca se ejecutó
+- [x] T010 [US2] `https://gestioncine-scanio-tabuada.web.app` siguió respondiendo HTTP 200 con el build anterior, sin degradación
+- [x] T011 [US2] Error revertido en `src/App.jsx`, listo para commitear y dejar `main` sano de nuevo
 
 **Checkpoint**: User Stories 1 y 2 funcionan juntas — deploy automático + falla segura.
 
@@ -69,7 +69,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Correr localmente `npm run build && firebase deploy --only hosting` y confirmar que termina exitosamente (escenario 3 de `quickstart.md`)
+- [x] T012 [US3] `npm run build && firebase deploy --only hosting` corrido localmente — deploy exitoso, igual que antes de agregar CI/CD
 
 **Checkpoint**: Las 3 user stories funcionan de forma independiente.
 
@@ -77,9 +77,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T013 [P] Actualizar `README.md` con la sección de CI/CD (disparo por push a `main`, dónde ver el estado del deploy, y que el deploy manual sigue como backup)
-- [ ] T014 Marcar como completadas las tareas de este archivo y de `specs/setup-proyecto-deploy.tasks.md` si corresponde; commitear en pasos chicos (uno por checkpoint de fase, no todo junto)
-- [ ] T015 Correr los 3 escenarios de `quickstart.md` una vez más de punta a punta como validación final antes de dar el módulo por cerrado
+- [x] T013 [P] `README.md` actualizado con sección de CI/CD + deploy manual como backup
+- [x] T014 Tareas marcadas en este archivo; commits incrementales por checkpoint de fase (Foundational, US1, US2, US3)
+- [x] T015 Los 3 escenarios de `quickstart.md` se corrieron en vivo durante T006-T012 (no hizo falta repetirlos aparte)
 
 ---
 

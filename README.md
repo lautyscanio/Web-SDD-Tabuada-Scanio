@@ -19,21 +19,31 @@ npm run dev
 npm run build
 ```
 
-## Deploy manual a Firebase Hosting
+## Deploy automático (CI/CD)
 
-Requiere tener la Firebase CLI autenticada (`firebase login`) y ser
-colaborador del proyecto `gestioncine-scanio-tabuada`.
+Cada push a `main` dispara `.github/workflows/firebase-hosting-merge.yml`:
+instala dependencias, corre `npm run build` y publica `dist/` en Firebase
+Hosting usando un Service Account guardado como GitHub secret
+(`FIREBASE_SERVICE_ACCOUNT_GESTIONCINE_SCANIO_TABUADA`). Si el build falla,
+el deploy no se ejecuta y el run queda marcado como fallido en la pestaña
+"Actions" del repo — el sitio publicado nunca queda con una versión rota.
+Detalle completo en `specs/001-ci-cd-github-actions/`.
+
+## Deploy manual a Firebase Hosting (backup)
+
+Sigue funcionando en paralelo al automático, sin depender de él. Requiere
+tener la Firebase CLI autenticada (`firebase login`) y ser colaborador del
+proyecto `gestioncine-scanio-tabuada`.
 
 ```bash
 npm run build
 firebase deploy --only hosting
 ```
 
-El deploy automático vía GitHub Actions (push a `main`) se documenta en
-`specs/deploy-cicd.spec.md` (pendiente de implementar).
-
 ## Estructura de documentación (SDD)
 
-Ver carpeta `specs/`: cada módulo tiene un `.spec.md` (qué hace, reglas de
-negocio, criterios de aceptación) y un `.tasks.md` (tareas técnicas
-ordenadas).
+Ver carpeta `specs/`: cada módulo tiene su documentación de diseño antes del
+código. Los módulos simples usan un par `<módulo>.spec.md` + `.tasks.md`
+plano; los módulos con spec-kit completo (`specs/NNN-nombre/`) además
+incluyen `plan.md`, `research.md`, `data-model.md`, `quickstart.md` y
+`checklists/`.
